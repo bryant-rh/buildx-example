@@ -1,0 +1,43 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: buildx
+  namespace: gitlab
+  labels:
+    app: buildx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: buildx
+  template:
+    metadata:
+      labels:
+        app: buildx
+    spec:
+      volumes:
+        - name: config
+          configMap:
+            name: buildkit-config
+            defaultMode: 420
+      containers:
+        - name: buildkitd
+          image: 'moby/buildkit:master'
+          volumeMounts:
+            - name: config
+              mountPath: /etc/buildkit
+          readinessProbe:
+            exec:
+              command:
+                - buildctl
+                - debug
+                - workers
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          imagePullPolicy: IfNotPresent
+          securityContext:
+            privileged: true
+      restartPolicy: Always
+

@@ -1,0 +1,38 @@
+kind: DaemonSet
+apiVersion: apps/v1
+metadata:
+  name: binfmt
+  namespace: gitlab
+spec:
+  selector:
+    matchLabels:
+      app: binfmt
+  template:
+    metadata:
+      labels:
+        app: binfmt
+    spec:
+      tolerations:
+        - key: kubernetes.io/role
+          value: master
+          effect: NoSchedule
+      initContainers:
+        - name: binfmt
+          image: tonistiigi/binfmt
+          args:
+            - --install
+            - all
+          securityContext:
+            privileged: true
+      containers:
+        - name: pause
+          image: kubernetes/pause
+          resources:
+            limits:
+              cpu: 50m
+              memory: 50Mi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+
+
